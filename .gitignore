@@ -16,6 +16,9 @@ playwright/.cache/
 .env.local
 .env.*.local
 
+# Local system prompt (the .example template is committed; the real one is not)
+system_prompt.txt
+
 # Logs
 *.log
 npm-debug.log*
