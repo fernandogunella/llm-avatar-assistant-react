@@ -1,0 +1,250 @@
+/* ------------------------------------------------------------------ *
+ * LlmAvatarAssistant global styles
+ *
+ * Design goals:
+ *  - The host page is a normal portfolio SPA; the assistant floats
+ *    above it with a transparent background so only the model, the
+ *    input field and the speech bubble are visible.
+ *  - The speech bubble grows up to a max height, then scrolls, and
+ *    has a comic-style tail pointing at the avatar.
+ *  - The avatar canvas is transparent (three.js alpha:true) so the
+ *    page shows through the model's background.
+ * ------------------------------------------------------------------ */
+
+:root {
+  --lav-surface: rgba(17, 18, 26, 0.72);
+  --lav-surface-border: rgba(255, 255, 255, 0.14);
+  --lav-text: #f4f5f8;
+  --lav-muted: rgba(244, 245, 248, 0.62);
+  --lav-accent: #7c9bff;
+  --lav-accent-soft: rgba(124, 155, 255, 0.18);
+  --lav-error: #ff7a7a;
+  --lav-radius: 14px;
+  --lav-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* ------------------------------------------------------------------ *
+ * Floating component root
+ * ------------------------------------------------------------------ */
+
+.lav-root {
+  position: fixed;
+  z-index: 9999;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  /* intentionally transparent: only the three parts show through */
+  background: transparent;
+  border: none;
+  color: var(--lav-text);
+  user-select: none;
+  /* let the page scroll through the transparent gaps */
+  pointer-events: none;
+}
+
+.lav-root > * {
+  pointer-events: auto;
+}
+
+.lav-side--left { left: 16px; top: 50%; transform: translateY(-50%); }
+.lav-side--right { right: 16px; top: 50%; transform: translateY(-50%); }
+.lav-side--bottom-left { left: 16px; bottom: 16px; transform: none; }
+.lav-side--bottom-right { right: 16px; bottom: 16px; transform: none; }
+
+/* ------------------------------------------------------------------ *
+ * Speech bubble (comic style, tail points down at the avatar)
+ * ------------------------------------------------------------------ */
+
+.lav-bubble {
+  position: relative;
+  width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 12px 14px;
+  background: var(--lav-surface);
+  border: 1px solid var(--lav-surface-border);
+  border-radius: var(--lav-radius);
+  box-shadow: var(--lav-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.lav-bubble[hidden] { display: none; }
+
+/* tail: a rotated square with a border, positioned under the bubble */
+.lav-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 18px;
+  height: 18px;
+  background: var(--lav-surface);
+  border-right: 1px solid var(--lav-surface-border);
+  border-bottom: 1px solid var(--lav-surface-border);
+  transform: translateX(-50%) rotate(45deg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.lav-bubble.lav-bubble--typing {
+  /* subtle pulse while waiting for the model */
+  animation: lav-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes lav-pulse {
+  0%, 100% { box-shadow: var(--lav-shadow); }
+  50%      { box-shadow: 0 10px 30px rgba(124, 155, 255, 0.35); }
+}
+
+.lav-bubble-section-link {
+  color: var(--lav-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ *
+ * Avatar canvas (three.js)
+ * ------------------------------------------------------------------ */
+
+.lav-avatar-wrap {
+  position: relative;
+  width: 180px;
+  height: 220px;
+  background: transparent;
+  /* no border, no shadow: the model must look like it is floating
+     on top of the page with nothing behind it */
+}
+
+.lav-avatar-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.lav-avatar-status {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: var(--lav-muted);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 1px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ *
+ * Input row
+ * ------------------------------------------------------------------ */
+
+.lav-input-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.lav-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  color: var(--lav-text);
+  background: var(--lav-surface);
+  border: 1px solid var(--lav-surface-border);
+  border-radius: var(--lav-radius);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.lav-input::placeholder { color: var(--lav-muted); }
+.lav-input:focus { border-color: var(--lav-accent); }
+
+.lav-send {
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0b1020;
+  background: var(--lav-accent);
+  border: none;
+  border-radius: var(--lav-radius);
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.lav-send:hover:not(:disabled) { filter: brightness(1.08); }
+.lav-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.lav-error {
+  width: 100%;
+  font-size: 0.75rem;
+  color: var(--lav-error);
+  padding: 4px 6px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Demo host page (the portfolio we scroll to)
+ * ------------------------------------------------------------------ */
+
+.demo {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 24px 120px;
+  color: #1c1e26;
+  scroll-behavior: smooth;
+}
+
+.demo h1 { font-size: 2rem; margin-bottom: 0.25rem; }
+.demo .lead { color: #5b6172; margin-top: 0; }
+.demo section { padding: 28px 0; border-top: 1px solid #e4e7ef; }
+.demo h2 { font-size: 1.35rem; margin-top: 0; color: #11131a; }
+.demo section p { color: #3a3f4c; }
+.demo code {
+  background: #eef1f8;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+.demo pre {
+  background: #11131a;
+  color: #e6e8f0;
+  padding: 16px;
+  border-radius: 12px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.demo .nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.demo .nav a {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #f1f3f9;
+  color: #333;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+.demo .nav a:hover { background: #e2e6f2; }
+.demo .config-card {
+  background: #f6f7fb;
+  border: 1px solid #e2e6f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+.demo table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.demo th, .demo td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e6e9f2; font-size: 0.9rem; }
+.demo th { color: #11131a; }
