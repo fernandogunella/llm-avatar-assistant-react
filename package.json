@@ -1,5 +1,5 @@
 {
-  "name": "llm-avatar-assistant",
+  "name": "llm-avatar-assistant-react",
   "description": "Floating 3D LLM avatar assistant component for React 19 SPA",
   "version": "1.0.0",
   "private": true,
